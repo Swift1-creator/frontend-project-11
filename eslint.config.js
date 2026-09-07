@@ -3,7 +3,14 @@ import globals from 'globals';
 
 export default [
   {
-    files: ['**/*.js'],
+    ignores: [
+      'dist/**',
+      'node_modules/**',
+      'coverage/**',
+    ],
+  },
+  {
+    files: ['src/**/*.js'],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',
