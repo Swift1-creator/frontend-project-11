@@ -12,6 +12,8 @@
 
 ```bash
 make install
+
+npm install yup valtiom
 ```
 
 ## Запуск
