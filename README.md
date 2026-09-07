@@ -1,8 +1,7 @@
 # RSS агрегатор
 
-[![hexlet-check](https://github.com/Swift1-creator/frontend-project-11/actions/workflows/hexlet-check.yml)
+[![hexlet-check](https://github.com/Swift1-creator/frontend-project-11/actions/workflows/hexlet-check.yml/badge.svg)](https://github.com/Swift1-creator/frontend-project-11/actions)
 
-# RSS агрегатор
 
 [![Actions Status](https://github.com/Swift1-creator/frontend-project-11/actions/workflows/hexlet-check.yml)
 
@@ -34,3 +33,4 @@ npm run build
 Проект подготовлен для деплоя на Vercel. После импорта репозитория в Vercel команда сборки: `npm run build`, директория публикации: `dist`.
 
 Сайт: https://YOUR-PROJECT.vercel.app
+ff

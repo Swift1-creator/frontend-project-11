@@ -1,2 +1,185 @@
-@import "tailwindcss";
-@plugin "@tailwindcss/forms";
+/* src/style.css */
+
+:root {
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #172033;
+  background: #f4f7fb;
+  font-synthesis: none;
+  line-height: 1.5;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+}
+
+#app {
+  width: min(1180px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 32px 0 48px;
+}
+
+h1,
+h2 {
+  margin: 0;
+  color: #10203a;
+}
+
+h1 {
+  margin-bottom: 24px;
+  font-size: clamp(28px, 4vw, 42px);
+  letter-spacing: -0.03em;
+}
+
+h2 {
+  margin-bottom: 14px;
+  font-size: 24px;
+}
+
+form {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  max-width: 760px;
+  margin-bottom: 14px;
+}
+
+input {
+  min-width: 0;
+  flex: 1;
+  padding: 12px 14px;
+  border: 1px solid #c8d2e1;
+  border-radius: 10px;
+  outline: none;
+  background: #fff;
+  color: #172033;
+  font: inherit;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+input:focus {
+  border-color: #4778d0;
+  box-shadow: 0 0 0 3px rgba(71, 120, 208, 0.16);
+}
+
+button {
+  padding: 12px 18px;
+  border: 0;
+  border-radius: 10px;
+  background: #3268c5;
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 600;
+  transition: background 0.2s, transform 0.2s;
+}
+
+button:hover {
+  background: #2557ad;
+}
+
+button:active {
+  transform: translateY(1px);
+}
+
+.text-danger,
+.error,
+[data-error] {
+  margin: 10px 0 20px;
+  color: #bd2d45;
+  font-size: 14px;
+}
+
+section {
+  margin-top: 30px;
+}
+
+#feeds {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+#feeds > * {
+  padding: 20px;
+  border: 1px solid #e2e8f2;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(29, 55, 92, 0.06);
+}
+
+#feeds h3 {
+  margin: 0 0 8px;
+  color: #1f4d9c;
+  font-size: 18px;
+}
+
+#feeds p {
+  margin: 0;
+  color: #59677c;
+}
+
+#posts {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 18px;
+  padding: 0;
+  list-style: none;
+}
+
+#posts > li {
+  min-height: 150px;
+  padding: 20px;
+  border: 1px solid #e2e8f2;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(29, 55, 92, 0.06);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+#posts > li:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 28px rgba(29, 55, 92, 0.12);
+}
+
+#posts a {
+  display: block;
+  margin-bottom: 10px;
+  color: #1858b5;
+  font-size: 17px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+#posts a:hover {
+  color: #0d3472;
+  text-decoration: underline;
+}
+
+#posts time,
+#posts small {
+  display: block;
+  color: #7a8799;
+  font-size: 13px;
+}
+
+@media (max-width: 600px) {
+  #app {
+    width: min(100% - 20px, 1180px);
+    padding-top: 20px;
+  }
+
+  form {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  input,
+  button {
+    width: 100%;
+  }
+}
