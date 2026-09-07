@@ -1,6 +1,7 @@
 import { proxy } from 'valtio';
 import * as yup from 'yup';
 
+import { startUpdates } from './application.js';
 import './style.css';
 import { fetchRss } from './api.js';
 import { parseRss } from './parser.js';
@@ -17,6 +18,8 @@ const state = proxy({
     loading: false,
   },
 });
+
+startUpdates(state, fetchRss, parseRss);
 
 const urlSchema = yup
   .string()
