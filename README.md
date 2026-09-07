@@ -1,38 +1,34 @@
 # RSS агрегатор
 
-[![hexlet-check](https://github.com/Swift1-creator/frontend-project-11/actions/workflows/hexlet-check.yml/badge.svg)](https://github.com/Swift1-creator/frontend-project-11/actions)
+[![hexlet-check](https://github.com/Swift1-creator/frontend-project-11/actions/workflows/hexlet-check.yml)
 
-После проекта вы сможете уверенно работать с DOM, Vite, Tailwind CSS, AJAX, валидациями и деплоить проект
+# RSS агрегатор
 
-Учебный проект Хекслета: https://ru.hexlet.io/programs/frontend
-Как это должно работать: https://files.hexlet.app/a/n1wvjd
+[![Actions Status](https://github.com/Swift1-creator/frontend-project-11/actions/workflows/hexlet-check.yml)
 
-## Стек
-
-- JavaScript
+Учебный проект RSS-агрегатора на Vite и Tailwind CSS.
 
 ## Установка
 
-<!-- Опишите установку: клонирование, зависимости, переменные окружения -->
-
 ```bash
-git clone https://github.com/Swift1-creator/frontend-project-11.git
-cd frontend-project-11
+make install
 ```
 
-## Использование
+## Запуск
 
-<!-- Добавьте примеры запуска и запись asciinema — именно это смотрит работодатель -->
+```bash
+npm run dev
+```
 
----
+## Проверка
 
-<details>
-<summary>Автоматические тесты Хекслета</summary>
+```bash
+npm run lint
+npm run build
+```
 
-Тесты запускаются на каждый коммит. За запуск отвечает файл `.github/workflows/hexlet-check.yml` — не удаляйте и не переименовывайте ни его, ни репозиторий.
+## Деплой
 
-</details>
+Проект подготовлен для деплоя на Vercel. После импорта репозитория в Vercel команда сборки: `npm run build`, директория публикации: `dist`.
 
-## О Хекслете
-
-[Хекслет](https://ru.hexlet.io/) — школа программирования: авторские программы обучения с практикой, поддержкой наставников и реальными проектами, которые остаются в резюме. Этот репозиторий — один из таких проектов.
+Сайт: https://YOUR-PROJECT.vercel.app
