@@ -1,6 +1,8 @@
 const UPDATE_INTERVAL = 5000;
 
-const getPostId = (post) => post.link || post.title;
+const getPostId = (post) => {
+  return post.link || post.title;
+};
 
 const addNewPosts = (state, feed, posts) => {
   const existingPostIds = new Set(
@@ -15,9 +17,10 @@ const addNewPosts = (state, feed, posts) => {
       id: crypto.randomUUID(),
       feedId: feed.id,
       title: post.title,
-      description: post.description,
+      description: post.description || '',
       link: post.link,
       pubDate: post.pubDate,
+      seen: false,
     }));
 
   console.log(
@@ -39,9 +42,7 @@ export const startUpdates = (state, fetchRss, parseRss) => {
     );
 
     if (isChecking) {
-      console.log(
-        'Предыдущая проверка ещё выполняется',
-      );
+      console.log('Предыдущая проверка ещё выполняется');
 
       setTimeout(checkUpdates, UPDATE_INTERVAL);
       return;
@@ -52,10 +53,7 @@ export const startUpdates = (state, fetchRss, parseRss) => {
     try {
       const feeds = [...state.feeds];
 
-      console.log(
-        'Количество фидов:',
-        feeds.length,
-      );
+      console.log('Количество фидов:', feeds.length);
 
       await Promise.all(
         feeds.map(async (feed) => {

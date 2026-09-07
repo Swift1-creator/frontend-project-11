@@ -2,15 +2,14 @@ import { proxy } from 'valtio';
 import * as yup from 'yup';
 
 import { startUpdates } from './application.js';
-import './style.css';
 import { fetchRss } from './api.js';
 import { parseRss } from './parser.js';
 import { initView } from './view.js';
+import './style.css';
 
 const state = proxy({
   feeds: [],
   posts: [],
-
   form: {
     value: '',
     error: null,
@@ -18,8 +17,6 @@ const state = proxy({
     loading: false,
   },
 });
-
-startUpdates(state, fetchRss, parseRss);
 
 const urlSchema = yup
   .string()
@@ -32,11 +29,7 @@ const { form, input } = initView(state);
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
 
-  console.log('Кнопка нажата');
-
   const url = input.value.trim();
-
-  console.log('URL:', url);
 
   state.form.error = null;
   state.form.status = 'Проверка ссылки...';
@@ -45,18 +38,14 @@ form.addEventListener('submit', async (event) => {
   try {
     await urlSchema.validate(url);
 
-    console.log('Ссылка прошла проверку');
+    if (state.feeds.some((feed) => feed.url === url)) {
+      throw new Error('Этот RSS-фид уже добавлен');
+    }
 
     state.form.status = 'Загрузка RSS...';
 
-    const xmlText = await fetchRss(url);
-
-    console.log('Ответ получен:', xmlText);
-
-    const result = parseRss(xmlText);
-
-    console.log('Результат парсинга:', result);
-
+    const xml = await fetchRss(url);
+    const result = parseRss(xml);
     const feedId = crypto.randomUUID();
 
     state.feeds.push({
@@ -74,33 +63,34 @@ form.addEventListener('submit', async (event) => {
         description: post.description,
         link: post.link,
         pubDate: post.pubDate,
+        seen: false,
       });
     });
 
-    console.log('Фиды:', state.feeds);
-    console.log('Посты:', state.posts);
-
-    state.form.status =
-      `Загружено постов: ${result.posts.length}`;
-
+    state.form.status = `Загружено постов: ${result.posts.length}`;
     input.value = '';
   } catch (error) {
-    console.error('Полная ошибка:', error);
+    console.error('Ошибка добавления RSS:', error);
 
     if (error.name === 'ValidationError') {
       state.form.error = error.message;
-    } else if (error.message === 'networkError') {
-      state.form.error =
-        'Не удалось подключиться к прокси';
-    } else if (error.message === 'emptyResponse') {
-      state.form.error =
-        'Прокси вернул пустой ответ';
-    } else if (error.message === 'parseError') {
-      state.form.error =
-        'Ответ не является корректным RSS-фидом';
+    } else if (error.message.includes('уже добавлен')) {
+      state.form.error = error.message;
+    } else if (
+      error.message.includes('время ожидания') ||
+      error.message.includes('Ошибка загрузки RSS')
+    ) {
+      state.form.error = 'Не удалось загрузить RSS-фид';
+    } else if (error.message.includes('пустой ответ')) {
+      state.form.error = 'Прокси вернул пустой ответ';
+    } else if (
+      error.message.includes('некорректный XML') ||
+      error.message.includes('отсутствует channel') ||
+      error.message.includes('отсутствует заголовок')
+    ) {
+      state.form.error = 'Ответ не является корректным RSS-фидом';
     } else {
-      state.form.error =
-        error.message || 'Неизвестная ошибка';
+      state.form.error = error.message || 'Неизвестная ошибка';
     }
 
     state.form.status = '';
@@ -108,3 +98,5 @@ form.addEventListener('submit', async (event) => {
     state.form.loading = false;
   }
 });
+
+startUpdates(state, fetchRss, parseRss);

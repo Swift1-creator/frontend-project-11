@@ -7,11 +7,14 @@ export default [
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',
-      globals: globals.browser,
+      globals: {
+        ...globals.browser,
+        ...globals.node,
+      },
     },
     rules: {
       ...js.configs.recommended.rules,
-      'no-console': 'warn',
+      'no-console': 'off',
     },
   },
 ];

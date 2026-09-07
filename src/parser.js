@@ -1,43 +1,67 @@
-const getText = (element, selector) => {
-  return element.querySelector(selector)?.textContent?.trim() || '';
+const getText = (element, selector) => (
+  element.querySelector(selector)?.textContent?.trim() || ''
+);
+
+const getTagText = (element, tagName) => {
+  const tag = element.getElementsByTagName(tagName)[0];
+
+  return tag?.textContent?.trim() || '';
+};
+
+const getDescription = (element) => (
+  getText(element, 'description') ||
+  getTagText(element, 'content:encoded') ||
+  getTagText(element, 'summary') ||
+  getTagText(element, 'content')
+);
+
+const getFallbackDescription = ({
+  author,
+  category,
+  pubDate,
+}) => {
+  const details = [];
+
+  if (author) {
+    details.push(`Автор: ${author}`);
+  }
+
+  if (category) {
+    details.push(`Категория: ${category}`);
+  }
+
+  if (pubDate) {
+    details.push(`Дата публикации: ${pubDate}`);
+  }
+
+  if (details.length === 0) {
+    return 'Описание поста отсутствует в RSS-фиде.';
+  }
+
+  return [
+    'Описание поста отсутствует в RSS-фиде.',
+    '',
+    ...details,
+  ].join('\n');
 };
 
 export const parseRss = (xmlText) => {
-  console.log('Тип ответа:', typeof xmlText);
-  console.log('Размер RSS:', xmlText?.length);
-  console.log('Начало RSS:', xmlText?.slice(0, 300));
-
   if (!xmlText || typeof xmlText !== 'string') {
     throw new Error('RSS-ответ не является строкой');
   }
 
-  const parser = new DOMParser();
-
-  const xmlDocument = parser.parseFromString(
+  const document = new DOMParser().parseFromString(
     xmlText,
     'application/xml',
   );
 
-  console.log(
-    'Корневой элемент:',
-    xmlDocument.documentElement?.nodeName,
-  );
-
-  const parserError = xmlDocument.querySelector('parsererror');
-
-  if (parserError) {
-    console.error('Ошибка XML:', parserError.textContent);
+  if (document.querySelector('parsererror')) {
     throw new Error('RSS содержит некорректный XML');
   }
 
-  const channel = xmlDocument.querySelector('channel');
+  const channel = document.querySelector('channel');
 
   if (!channel) {
-    console.error(
-      'Элемент channel не найден. Корень:',
-      xmlDocument.documentElement?.outerHTML?.slice(0, 500),
-    );
-
     throw new Error('В RSS отсутствует channel');
   }
 
@@ -47,27 +71,33 @@ export const parseRss = (xmlText) => {
     throw new Error('В RSS отсутствует заголовок channel');
   }
 
-  const description =
-    getText(channel, 'description') || title;
-
   const posts = [...channel.querySelectorAll('item')]
-    .map((item) => ({
-      title: getText(item, 'title'),
-      description: getText(item, 'description'),
-      link: getText(item, 'link'),
-      pubDate: getText(item, 'pubDate'),
-    }))
-    .filter((post) => post.title);
+    .map((item) => {
+      const author = getText(item, 'author');
+      const category = getText(item, 'category');
+      const pubDate = getText(item, 'pubDate');
+      const description = getDescription(item);
 
-  console.log('RSS успешно разобран:', {
-    feedTitle: title,
-    postsCount: posts.length,
-  });
+      return {
+        title: getText(item, 'title'),
+        description: description || getFallbackDescription({
+          author,
+          category,
+          pubDate,
+        }),
+        link: getText(item, 'link'),
+        pubDate,
+        author,
+        category,
+        seen: false,
+      };
+    })
+    .filter((post) => post.title);
 
   return {
     feed: {
       title,
-      description,
+      description: getDescription(channel) || title,
     },
     posts,
   };
