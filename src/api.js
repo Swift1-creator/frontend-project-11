@@ -10,10 +10,10 @@ export const fetchRss = async (url) => {
   }, REQUEST_TIMEOUT);
 
   try {
-    const params = new URLSearchParams();
-
-    params.set('url', url);
-    params.set('disableCache', 'true');
+    const params = new URLSearchParams({
+      url,
+      disableCache: 'true',
+    });
 
     const response = await fetch(`${corsProxy}/get?${params.toString()}`, {
       signal: controller.signal,
@@ -25,8 +25,6 @@ export const fetchRss = async (url) => {
 
     const responseText = await response.text();
 
-    // Ответ AllOrigins обычно имеет вид:
-    // {"contents":"<rss>...</rss>"}
     try {
       const data = JSON.parse(responseText);
 
@@ -36,7 +34,6 @@ export const fetchRss = async (url) => {
 
       throw new Error('INVALID_RSS');
     } catch (error) {
-      // Если это не JSON, возможно, mock вернул XML напрямую.
       if (
         responseText.includes('<rss') ||
         responseText.includes('<feed') ||

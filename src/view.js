@@ -1,12 +1,13 @@
 import { subscribe } from 'valtio';
 
-const escapeHtml = (value = '') =>
+const escapeHtml = (value = '') => (
   String(value)
     .replaceAll('&', '&amp;')
     .replaceAll('<', '&lt;')
     .replaceAll('>', '&gt;')
     .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#039;');
+    .replaceAll("'", '&#039;')
+);
 
 const getSafeUrl = (value = '') => {
   try {
@@ -22,11 +23,12 @@ const getSafeUrl = (value = '') => {
   }
 };
 
-const getPostDescription = (post) =>
+const getPostDescription = (post) => (
   post.description ||
   post.content ||
   post.summary ||
-  'Описание отсутствует';
+  'Описание отсутствует'
+);
 
 export const initView = (state) => {
   const app = document.querySelector('#app');
@@ -60,12 +62,14 @@ export const initView = (state) => {
         id="form-error"
         class="error"
         role="alert"
+        data-test="feedback-error"
       ></p>
 
       <p
         id="status"
         class="status"
         role="status"
+        data-test="feedback-status"
       ></p>
 
       <section id="feeds-section">
@@ -199,6 +203,7 @@ export const initView = (state) => {
                 href="${escapeHtml(getSafeUrl(post.link))}"
                 target="_blank"
                 rel="noopener noreferrer"
+                data-test="post-link"
                 data-seen="${post.seen === true ? 'true' : 'false'}"
               >
                 ${escapeHtml(post.title)}
@@ -207,6 +212,7 @@ export const initView = (state) => {
               <button
                 class="preview-button"
                 type="button"
+                data-test="preview-button"
                 data-preview-index="${index}"
               >
                 Просмотр
@@ -244,6 +250,9 @@ export const initView = (state) => {
   const render = () => {
     errorElement.textContent = state.form.error || '';
     statusElement.textContent = state.form.status || '';
+
+    errorElement.hidden = !state.form.error;
+    statusElement.hidden = !state.form.status;
 
     submitButton.disabled = state.form.loading;
 

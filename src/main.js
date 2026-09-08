@@ -11,6 +11,10 @@ const INVALID_URL_MESSAGE = 'Ссылка должна быть валидным
 const NETWORK_ERROR_MESSAGE = 'Ошибка сети';
 const SUCCESS_MESSAGE = 'RSS успешно загружен';
 
+const generateId = () => (
+  `${Date.now()}-${Math.random().toString(16).slice(2)}`
+);
+
 const { form, input } = initView(state);
 
 form.addEventListener('submit', async (event) => {
@@ -49,7 +53,7 @@ form.addEventListener('submit', async (event) => {
     const parsed = parseRss(xml);
 
     const feed = {
-      id: crypto.randomUUID(),
+      id: generateId(),
       url: normalizedUrl,
       title: parsed.feed.title,
       description: parsed.feed.description,
@@ -57,7 +61,7 @@ form.addEventListener('submit', async (event) => {
 
     const posts = parsed.posts.map((post) => ({
       ...post,
-      id: crypto.randomUUID(),
+      id: generateId(),
       feedId: feed.id,
       seen: false,
     }));

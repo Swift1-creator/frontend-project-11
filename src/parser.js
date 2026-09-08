@@ -59,7 +59,7 @@ const getFallbackDescription = ({
 
 export const parseRss = (xmlText) => {
   if (!xmlText || typeof xmlText !== 'string') {
-    throw new Error('RSS-ответ не является строкой');
+    throw new Error('Ресурс не содержит валидный RSS');
   }
 
   const document = new DOMParser().parseFromString(
