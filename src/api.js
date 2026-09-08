@@ -1,7 +1,7 @@
 export const fetchRss = async (url) => {
   const controller = new AbortController();
 
-  const timeout = setTimeout(() => {
+  const timeoutId = setTimeout(() => {
     controller.abort();
   }, 4000);
 
@@ -17,13 +17,13 @@ export const fetchRss = async (url) => {
       throw new Error('NETWORK_ERROR');
     }
 
-    const xml = await response.text();
+    const body = await response.text();
 
-    if (!xml.trim()) {
+    if (!body.trim()) {
       throw new Error('INVALID_RSS');
     }
 
-    return xml;
+    return body;
   } catch (error) {
     if (error.name === 'AbortError') {
       throw new Error('NETWORK_ERROR');
@@ -31,6 +31,6 @@ export const fetchRss = async (url) => {
 
     throw error;
   } finally {
-    clearTimeout(timeout);
+    clearTimeout(timeoutId);
   }
 };
