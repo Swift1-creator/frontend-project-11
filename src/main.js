@@ -7,6 +7,9 @@ import { initView } from './view.js';
 
 const INVALID_RSS_MESSAGE = 'Ресурс не содержит валидный RSS';
 const DUPLICATE_RSS_MESSAGE = 'RSS уже загружен';
+const INVALID_URL_MESSAGE = 'Ссылка должна быть валидным URL';
+const NETWORK_ERROR_MESSAGE = 'Ошибка сети';
+const SUCCESS_MESSAGE = 'RSS успешно загружен';
 
 const { form, input } = initView(state);
 
@@ -23,12 +26,12 @@ form.addEventListener('submit', async (event) => {
   try {
     parsedUrl = new URL(url);
   } catch {
-    state.form.error = 'Ссылка должна быть валидным URL';
+    state.form.error = INVALID_URL_MESSAGE;
     return;
   }
 
   if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
-    state.form.error = 'Ссылка должна быть валидным URL';
+    state.form.error = INVALID_URL_MESSAGE;
     return;
   }
 
@@ -63,18 +66,16 @@ form.addEventListener('submit', async (event) => {
     state.posts.unshift(...posts);
 
     input.value = '';
-    state.form.status = 'RSS успешно загружен';
+    state.form.status = SUCCESS_MESSAGE;
   } catch (error) {
     console.error('RSS loading error:', error);
 
-    if (
-      error?.message === 'INVALID_RSS' ||
-      error?.message === 'invalid-rss' ||
-      error?.message === INVALID_RSS_MESSAGE
-    ) {
-      state.form.error = INVALID_RSS_MESSAGE;
+    const errorMessage = error instanceof Error ? error.message : '';
+
+    if (errorMessage === 'NETWORK_ERROR') {
+      state.form.error = NETWORK_ERROR_MESSAGE;
     } else {
-      state.form.error = 'Ошибка сети';
+      state.form.error = INVALID_RSS_MESSAGE;
     }
   } finally {
     state.form.loading = false;
