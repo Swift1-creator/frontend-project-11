@@ -1,147 +1,78 @@
 import { defineConfig } from 'vite';
 
-const fetchWithTimeout = async (
-  url,
-  options = {},
-  timeout = 3000,
-) => {
-  const controller = new AbortController();
-
-  const timer = setTimeout(() => {
-    controller.abort();
-  }, timeout);
-
-  try {
-    const response = await fetch(url, {
-      ...options,
-      signal: controller.signal,
-    });
-
-    const body = await response.text();
-
-    return {
-      response,
-      body,
-    };
-  } finally {
-    clearTimeout(timer);
-  }
-};
-
-const rssProxyHandler = async (req, res) => {
-  try {
-    const currentUrl = new URL(
-      req.url || '',
-      'http://localhost:8080',
-    );
-
-    const targetUrl = currentUrl.searchParams.get('url');
+function setupRssProxy(server) {
+  server.middlewares.use('/rss-proxy', async (req, res) => {
+    const requestUrl = new URL(req.url, 'http://localhost');
+    const targetUrl = requestUrl.searchParams.get('url');
 
     if (!targetUrl) {
       res.statusCode = 400;
-      res.setHeader(
-        'Content-Type',
-        'text/plain; charset=utf-8',
-      );
-      res.end('Некорректный URL');
+      res.end('Missing url');
       return;
     }
 
-    let parsedUrl;
+    let parsedTargetUrl;
 
     try {
-      parsedUrl = new URL(targetUrl);
+      parsedTargetUrl = new URL(targetUrl);
     } catch {
       res.statusCode = 400;
-      res.setHeader(
-        'Content-Type',
-        'text/plain; charset=utf-8',
-      );
-      res.end('Некорректный URL');
+      res.end('Invalid url');
       return;
     }
 
-    if (
-      parsedUrl.protocol !== 'http:' &&
-      parsedUrl.protocol !== 'https:'
-    ) {
+    if (!['http:', 'https:'].includes(parsedTargetUrl.protocol)) {
       res.statusCode = 400;
-      res.setHeader(
-        'Content-Type',
-        'text/plain; charset=utf-8',
-      );
-      res.end('Некорректный URL');
+      res.end('Invalid url');
       return;
     }
 
-    const { response, body } = await fetchWithTimeout(
-      parsedUrl.href,
-      {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 4000);
+
+    try {
+      const response = await fetch(parsedTargetUrl, {
+        signal: controller.signal,
         headers: {
-          Accept:
-            'application/rss+xml, application/xml, text/xml, */*',
-          'User-Agent': 'Mozilla/5.0 RSS Reader',
+          Accept: 'application/rss+xml, application/xml, text/xml, */*',
         },
-      },
-      3000,
-    );
+      });
 
-    if (!response.ok) {
-      res.statusCode = response.status;
+      if (!response.ok) {
+        res.statusCode = response.status;
+        res.end('RSS request failed');
+        return;
+      }
+
+      const body = await response.text();
+
+      res.statusCode = 200;
       res.setHeader(
         'Content-Type',
-        'text/plain; charset=utf-8',
+        response.headers.get('content-type') || 'application/xml',
       );
-      res.end('Ошибка сети');
-      return;
+      res.end(body);
+    } catch {
+      res.statusCode = 502;
+      res.end('RSS proxy error');
+    } finally {
+      clearTimeout(timeoutId);
     }
-
-    res.statusCode = 200;
-    res.setHeader(
-      'Content-Type',
-      'application/xml; charset=utf-8',
-    );
-    res.end(body);
-  } catch (error) {
-    console.error('RSS proxy error:', error);
-
-    res.statusCode = 500;
-    res.setHeader(
-      'Content-Type',
-      'text/plain; charset=utf-8',
-    );
-    res.end('Ошибка сети');
-  }
-};
+  });
+}
 
 const rssProxyPlugin = {
   name: 'rss-proxy',
 
   configureServer(server) {
-    server.middlewares.use(
-      '/rss-proxy',
-      rssProxyHandler,
-    );
+    setupRssProxy(server);
   },
 
   configurePreviewServer(server) {
-    server.middlewares.use(
-      '/rss-proxy',
-      rssProxyHandler,
-    );
+    setupRssProxy(server);
   },
 };
 
 export default defineConfig({
   plugins: [rssProxyPlugin],
-
-  server: {
-    host: '0.0.0.0',
-    port: 8080,
-  },
-
-  preview: {
-    host: '0.0.0.0',
-    port: 8080,
-  },
 });
