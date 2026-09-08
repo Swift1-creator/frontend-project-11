@@ -6,9 +6,10 @@ import { parseRss } from './parser.js';
 import { initView } from './view.js';
 
 const INVALID_RSS_MESSAGE = 'Ресурс не содержит валидный RSS';
+const DUPLICATE_RSS_MESSAGE = 'RSS уже существует';
 const INVALID_URL_MESSAGE = 'Ссылка должна быть валидным URL';
 const NETWORK_ERROR_MESSAGE = 'Ошибка сети';
-const DUPLICATE_RSS_MESSAGE = 'RSS уже существует';
+const SUCCESS_MESSAGE = 'RSS успешно загружен';
 
 const generateId = () => (
   `${Date.now()}-${Math.random().toString(16).slice(2)}`
