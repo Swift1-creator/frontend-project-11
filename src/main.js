@@ -32,7 +32,7 @@ form.addEventListener('submit', async (event) => {
   const normalizedUrl = parsedUrl.href;
 
   if (state.feeds.some((feed) => feed.url === normalizedUrl)) {
-    state.form.error = 'RSS уже загружен/уже добавлен';
+    state.form.error = 'RSS уже существует';
     return;
   }
 

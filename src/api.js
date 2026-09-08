@@ -1,4 +1,4 @@
-const REQUEST_TIMEOUT = 4500;
+const REQUEST_TIMEOUT = 4000;
 
 export const fetchRss = async (url) => {
   const controller = new AbortController();
@@ -8,12 +8,11 @@ export const fetchRss = async (url) => {
   }, REQUEST_TIMEOUT);
 
   try {
-    const response = await fetch(
-      `/rss-proxy?url=${encodeURIComponent(url)}`,
-      {
-        signal: controller.signal,
-      },
-    );
+    const proxyUrl = `/rss-proxy?url=${encodeURIComponent(url)}`;
+
+    const response = await fetch(proxyUrl, {
+      signal: controller.signal,
+    });
 
     if (!response.ok) {
       throw new Error('NETWORK_ERROR');
@@ -27,7 +26,7 @@ export const fetchRss = async (url) => {
 
     return xml;
   } catch (error) {
-    if (error.message === 'INVALID_RSS') {
+    if (error?.message === 'INVALID_RSS') {
       throw error;
     }
 

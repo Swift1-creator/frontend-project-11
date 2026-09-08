@@ -11,27 +11,14 @@ function setupRssProxy(server) {
       return;
     }
 
-    let parsedTargetUrl;
-
-    try {
-      parsedTargetUrl = new URL(targetUrl);
-    } catch {
-      res.statusCode = 400;
-      res.end('Invalid url');
-      return;
-    }
-
-    if (!['http:', 'https:'].includes(parsedTargetUrl.protocol)) {
-      res.statusCode = 400;
-      res.end('Invalid url');
-      return;
-    }
-
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 4000);
+
+    const timeoutId = setTimeout(() => {
+      controller.abort();
+    }, 4000);
 
     try {
-      const response = await fetch(parsedTargetUrl, {
+      const response = await fetch(targetUrl, {
         signal: controller.signal,
         headers: {
           Accept: 'application/rss+xml, application/xml, text/xml, */*',
