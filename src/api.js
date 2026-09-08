@@ -21,9 +21,12 @@ export const fetchRss = async (url) => {
       disableCache: 'true',
     });
 
-    const response = await fetch(`${corsProxy}/get?${params.toString()}`, {
-      signal: controller.signal,
-    });
+    const response = await fetch(
+      `${corsProxy}/get?${params.toString()}`,
+      {
+        signal: controller.signal,
+      },
+    );
 
     if (!response.ok) {
       throw new Error('NETWORK_ERROR');
@@ -53,6 +56,10 @@ export const fetchRss = async (url) => {
 
     return data.contents;
   } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new Error('INVALID_RSS');
+    }
+
     if (
       error instanceof Error
       && (
