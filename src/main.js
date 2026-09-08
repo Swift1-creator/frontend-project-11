@@ -6,6 +6,7 @@ import { parseRss } from './parser.js';
 import { initView } from './view.js';
 
 const INVALID_RSS_MESSAGE = 'Ресурс не содержит валидный RSS';
+const DUPLICATE_RSS_MESSAGE = 'RSS уже добавлен';
 
 const { form, input } = initView(state);
 
@@ -34,7 +35,7 @@ form.addEventListener('submit', async (event) => {
   const normalizedUrl = parsedUrl.href;
 
   if (state.feeds.some((feed) => feed.url === normalizedUrl)) {
-    state.form.error = 'RSS уже существует';
+    state.form.error = DUPLICATE_RSS_MESSAGE;
     return;
   }
 

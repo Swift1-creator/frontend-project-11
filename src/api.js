@@ -1,6 +1,6 @@
 const corsProxy = 'https://allorigins.hexlet.app';
 
-const REQUEST_TIMEOUT = 4000;
+const REQUEST_TIMEOUT = 4500;
 
 export const fetchRss = async (url) => {
   const controller = new AbortController();
@@ -10,12 +10,10 @@ export const fetchRss = async (url) => {
   }, REQUEST_TIMEOUT);
 
   try {
-    const proxyUrl = new URL(`${corsProxy}/get`);
+    const requestUrl =
+      `${corsProxy}/get?url=${encodeURIComponent(url)}&disableCache=true`;
 
-    proxyUrl.searchParams.set('url', url);
-    proxyUrl.searchParams.set('disableCache', 'true');
-
-    const response = await fetch(proxyUrl.toString(), {
+    const response = await fetch(requestUrl, {
       signal: controller.signal,
     });
 
@@ -23,12 +21,12 @@ export const fetchRss = async (url) => {
       throw new Error('NETWORK_ERROR');
     }
 
-    const responseText = await response.text();
+    const text = await response.text();
 
     let data;
 
     try {
-      data = JSON.parse(responseText);
+      data = JSON.parse(text);
     } catch {
       throw new Error('INVALID_RSS');
     }
