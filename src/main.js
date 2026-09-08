@@ -1,6 +1,5 @@
 import './style.css';
 
-import i18next from './locales.js';
 import { state } from './state.js';
 import { validateUrl } from './validation.js';
 import { fetchRss } from './api.js';
@@ -51,19 +50,16 @@ form.addEventListener('submit', async (event) => {
     state.posts.unshift(...posts);
 
     input.value = '';
-    state.form.status = i18next.t('status.rssLoaded');
+    state.form.status = 'RSS успешно загружен';
   } catch (error) {
     console.error(error);
 
     if (error.name === 'ValidationError') {
       if (error.message === 'validation.duplicate') {
-        state.form.error = i18next.t(
-          'validation.duplicate',
-        );
+        state.form.error = 'RSS уже существует';
       } else {
-        state.form.error = i18next.t(
-          'validation.url',
-        );
+        state.form.error =
+          'Ссылка должна быть валидным URL';
       }
 
       return;
@@ -74,16 +70,13 @@ form.addEventListener('submit', async (event) => {
       error.message.includes('RSS') ||
       error.message.includes('channel')
     ) {
-      state.form.error = i18next.t(
-        'errors.parseError',
-      );
+      state.form.error =
+        'Ресурс не содержит валидный RSS';
 
       return;
     }
 
-    state.form.error = i18next.t(
-      'errors.network',
-    );
+    state.form.error = 'Ошибка сети';
   } finally {
     state.form.loading = false;
   }
