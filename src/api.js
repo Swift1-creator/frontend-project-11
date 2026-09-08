@@ -1,36 +1,44 @@
+const withTimeout = (promise, milliseconds) => {
+  return Promise.race([
+    promise,
+
+    new Promise((_, reject) => {
+      setTimeout(() => {
+        reject(new Error('NETWORK_ERROR'));
+      }, milliseconds);
+    }),
+  ]);
+};
+
 export const fetchRss = async (url) => {
-  const controller = new AbortController();
-
-  const timeoutId = setTimeout(() => {
-    controller.abort();
-  }, 4000);
-
   try {
-    const response = await fetch(
-      `/rss-proxy?url=${encodeURIComponent(url)}`,
-      {
-        signal: controller.signal,
-      },
-    );
+    const proxyUrl =
+      `/rss-proxy?url=${encodeURIComponent(url)}`;
 
-    const body = await response.text();
+    const response = await withTimeout(
+      fetch(proxyUrl),
+      2500,
+    );
 
     if (!response.ok) {
       throw new Error('NETWORK_ERROR');
     }
 
-    if (!body.trim()) {
+    const xml = await withTimeout(
+      response.text(),
+      2500,
+    );
+
+    if (!xml.trim()) {
       throw new Error('INVALID_RSS');
     }
 
-    return body;
+    return xml;
   } catch (error) {
-    if (error.name === 'AbortError') {
-      throw new Error('NETWORK_ERROR');
+    if (error.message === 'INVALID_RSS') {
+      throw error;
     }
 
-    throw error;
-  } finally {
-    clearTimeout(timeoutId);
+    throw new Error('NETWORK_ERROR');
   }
 };

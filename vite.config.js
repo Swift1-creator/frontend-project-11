@@ -7,7 +7,7 @@ const fetchWithTimeout = async (
 ) => {
   const controller = new AbortController();
 
-  const timeoutId = setTimeout(() => {
+  const timer = setTimeout(() => {
     controller.abort();
   }, timeout);
 
@@ -24,31 +24,33 @@ const fetchWithTimeout = async (
       body,
     };
   } finally {
-    clearTimeout(timeoutId);
+    clearTimeout(timer);
   }
 };
 
-const rssProxyMiddleware = async (req, res) => {
+const rssProxyHandler = async (req, res) => {
   try {
-    const requestUrl = new URL(
+    const currentUrl = new URL(
       req.url || '',
       'http://localhost:8080',
-    ).searchParams.get('url');
+    );
 
-    if (!requestUrl) {
+    const targetUrl = currentUrl.searchParams.get('url');
+
+    if (!targetUrl) {
       res.statusCode = 400;
       res.setHeader(
         'Content-Type',
         'text/plain; charset=utf-8',
       );
-      res.end('Не указан параметр url');
+      res.end('Некорректный URL');
       return;
     }
 
     let parsedUrl;
 
     try {
-      parsedUrl = new URL(requestUrl);
+      parsedUrl = new URL(targetUrl);
     } catch {
       res.statusCode = 400;
       res.setHeader(
@@ -59,7 +61,10 @@ const rssProxyMiddleware = async (req, res) => {
       return;
     }
 
-    if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
+    if (
+      parsedUrl.protocol !== 'http:' &&
+      parsedUrl.protocol !== 'https:'
+    ) {
       res.statusCode = 400;
       res.setHeader(
         'Content-Type',
@@ -73,9 +78,9 @@ const rssProxyMiddleware = async (req, res) => {
       parsedUrl.href,
       {
         headers: {
-          'User-Agent': 'Mozilla/5.0 RSS Reader',
           Accept:
             'application/rss+xml, application/xml, text/xml, */*',
+          'User-Agent': 'Mozilla/5.0 RSS Reader',
         },
       },
       3000,
@@ -87,9 +92,7 @@ const rssProxyMiddleware = async (req, res) => {
         'Content-Type',
         'text/plain; charset=utf-8',
       );
-      res.end(
-        `Ошибка удалённого RSS: ${response.status}\n${body}`,
-      );
+      res.end('Ошибка сети');
       return;
     }
 
@@ -100,18 +103,14 @@ const rssProxyMiddleware = async (req, res) => {
     );
     res.end(body);
   } catch (error) {
+    console.error('RSS proxy error:', error);
+
     res.statusCode = 500;
     res.setHeader(
       'Content-Type',
       'text/plain; charset=utf-8',
     );
-
-    if (error.name === 'AbortError') {
-      res.end('Ошибка RSS-прокси: превышено время ожидания');
-      return;
-    }
-
-    res.end(`Ошибка RSS-прокси: ${error.message}`);
+    res.end('Ошибка сети');
   }
 };
 
@@ -121,14 +120,14 @@ const rssProxyPlugin = {
   configureServer(server) {
     server.middlewares.use(
       '/rss-proxy',
-      rssProxyMiddleware,
+      rssProxyHandler,
     );
   },
 
   configurePreviewServer(server) {
     server.middlewares.use(
       '/rss-proxy',
-      rssProxyMiddleware,
+      rssProxyHandler,
     );
   },
 };

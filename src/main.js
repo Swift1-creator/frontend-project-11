@@ -19,11 +19,12 @@ form.addEventListener('submit', async (event) => {
 
   try {
     parsedUrl = new URL(url);
-
-    if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
-      throw new Error('INVALID_URL');
-    }
   } catch {
+    state.form.error = 'Ссылка должна быть валидным URL';
+    return;
+  }
+
+  if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
     state.form.error = 'Ссылка должна быть валидным URL';
     return;
   }
@@ -31,7 +32,7 @@ form.addEventListener('submit', async (event) => {
   const normalizedUrl = parsedUrl.href;
 
   if (state.feeds.some((feed) => feed.url === normalizedUrl)) {
-    state.form.error = 'RSS уже существует';
+    state.form.error = 'RSS уже загружен/уже добавлен';
     return;
   }
 
@@ -41,8 +42,10 @@ form.addEventListener('submit', async (event) => {
     const xml = await fetchRss(normalizedUrl);
     const parsed = parseRss(xml);
 
-    if (!parsed || !parsed.feed || !parsed.feed.title) {
-      throw new Error('INVALID_RSS');
+    if (!parsed?.feed?.title) {
+      const error = new Error('INVALID_RSS');
+      error.code = 'INVALID_RSS';
+      throw error;
     }
 
     const feed = {
@@ -67,10 +70,9 @@ form.addEventListener('submit', async (event) => {
   } catch (error) {
     console.error(error);
 
-    if (
-      error.message === 'INVALID_RSS' ||
-      error.message === 'invalid-rss'
-    ) {
+    const errorCode = error?.code || error?.message;
+
+    if (['INVALID_RSS', 'invalid-rss'].includes(errorCode)) {
       state.form.error = 'Ресурс не содержит валидный RSS';
     } else {
       state.form.error = 'Ошибка сети';
