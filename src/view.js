@@ -164,12 +164,19 @@ export const initView = (state) => {
     feedsElement.innerHTML = state.feeds
       .map(
         (feed) => `
-          <article class="feed">
-            <h3>
+          <article
+            class="feed"
+            data-test="feed"
+          >
+            <h2
+              data-test="feed-title"
+            >
               ${escapeHtml(feed.title)}
-            </h3>
+            </h2>
 
-            <p>
+            <p
+              data-test="feed-description"
+            >
               ${escapeHtml(feed.description || '')}
             </p>
           </article>
@@ -182,14 +189,17 @@ export const initView = (state) => {
     postsElement.innerHTML = state.posts
       .map(
         (post, index) => `
-          <li class="post">
+          <li
+            class="post"
+            data-test="post"
+          >
             <div class="post-header">
               <a
                 class="post-link"
                 href="${escapeHtml(getSafeUrl(post.link))}"
                 target="_blank"
                 rel="noopener noreferrer"
-                data-seen="${post.seen === true}"
+                data-seen="${post.seen === true ? 'true' : 'false'}"
               >
                 ${escapeHtml(post.title)}
               </a>

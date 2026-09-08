@@ -15,7 +15,7 @@ export const fetchRss = async (url) => {
     proxyUrl.searchParams.set('url', url);
     proxyUrl.searchParams.set('disableCache', 'true');
 
-    const response = await fetch(proxyUrl, {
+    const response = await fetch(proxyUrl.toString(), {
       signal: controller.signal,
     });
 
@@ -23,7 +23,15 @@ export const fetchRss = async (url) => {
       throw new Error('NETWORK_ERROR');
     }
 
-    const data = await response.json();
+    const responseText = await response.text();
+
+    let data;
+
+    try {
+      data = JSON.parse(responseText);
+    } catch {
+      throw new Error('INVALID_RSS');
+    }
 
     if (!data || typeof data.contents !== 'string') {
       throw new Error('INVALID_RSS');
@@ -31,7 +39,10 @@ export const fetchRss = async (url) => {
 
     return data.contents;
   } catch (error) {
-    if (error?.message === 'INVALID_RSS') {
+    if (
+      error?.message === 'INVALID_RSS' ||
+      error?.message === 'invalid-rss'
+    ) {
       throw error;
     }
 
