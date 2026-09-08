@@ -10,12 +10,12 @@ export const fetchRss = async (url) => {
   }, REQUEST_TIMEOUT);
 
   try {
-    const params = new URLSearchParams({
-      url,
-      disableCache: 'true',
-    });
+    const params = new URLSearchParams();
 
-    const response = await fetch(`${corsProxy}/get?${params}`, {
+    params.set('url', url);
+    params.set('disableCache', 'true');
+
+    const response = await fetch(`${corsProxy}/get?${params.toString()}`, {
       signal: controller.signal,
     });
 
@@ -23,15 +23,42 @@ export const fetchRss = async (url) => {
       throw new Error('NETWORK_ERROR');
     }
 
-    const data = await response.json();
+    const responseText = await response.text();
 
-    if (!data || typeof data.contents !== 'string') {
+    // Ответ AllOrigins обычно имеет вид:
+    // {"contents":"<rss>...</rss>"}
+    try {
+      const data = JSON.parse(responseText);
+
+      if (data && typeof data.contents === 'string') {
+        return data.contents;
+      }
+
+      throw new Error('INVALID_RSS');
+    } catch (error) {
+      // Если это не JSON, возможно, mock вернул XML напрямую.
+      if (
+        responseText.includes('<rss') ||
+        responseText.includes('<feed') ||
+        responseText.includes('<?xml')
+      ) {
+        return responseText;
+      }
+
+      if (error instanceof Error && error.message === 'INVALID_RSS') {
+        throw error;
+      }
+
       throw new Error('INVALID_RSS');
     }
-
-    return data.contents;
   } catch (error) {
-    if (error instanceof Error && error.message === 'INVALID_RSS') {
+    if (
+      error instanceof Error &&
+      (
+        error.message === 'INVALID_RSS' ||
+        error.message === 'NETWORK_ERROR'
+      )
+    ) {
       throw error;
     }
 
