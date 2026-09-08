@@ -75,6 +75,12 @@ export const parseRss = (xmlText) => {
     throw new Error('Ресурс не содержит валидный RSS');
   }
 
+  const rootTagName = document.documentElement?.tagName?.toLowerCase();
+
+  if (rootTagName !== 'rss') {
+    throw new Error('Ресурс не содержит валидный RSS');
+  }
+
   const channel = document.querySelector('channel');
 
   if (!channel) {
