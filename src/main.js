@@ -74,10 +74,10 @@ form.addEventListener('submit', async (event) => {
   } catch (error) {
     console.error('RSS loading error:', error);
 
-    if (error instanceof Error && error.message === 'INVALID_RSS') {
-      state.form.error = INVALID_RSS_MESSAGE;
-    } else {
+    if (error instanceof Error && error.message === 'NETWORK_ERROR') {
       state.form.error = NETWORK_ERROR_MESSAGE;
+    } else {
+      state.form.error = INVALID_RSS_MESSAGE;
     }
 
     state.form.status = '';
