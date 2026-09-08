@@ -42,46 +42,44 @@ form.addEventListener('submit', async (event) => {
   const normalizedUrl = parsedUrl.href;
 
   if (state.feeds.some((feed) => feed.url === normalizedUrl)) {
-    state.form.error = DUPLICATE_RSS_MESSAGE;
-    return;
+  state.form.error = DUPLICATE_RSS_MESSAGE;
+  return;
+}
+
+state.form.loading = true;
+
+try {
+  const xml = await fetchRss(url);
+  const parsed = parseRss(xml);
+
+  const feed = {
+    id: generateId(),
+    url: normalizedUrl,
+    title: parsed.feed.title,
+    description: parsed.feed.description,
+  };
+
+  const posts = parsed.posts.map((post) => ({
+    ...post,
+    id: generateId(),
+    feedId: feed.id,
+    seen: false,
+  }));
+
+  state.feeds.push(feed);
+  state.posts.unshift(...posts);
+
+  input.value = '';
+  state.form.status = SUCCESS_MESSAGE;
+} catch (error) {
+  if (error instanceof Error && error.message === 'NETWORK_ERROR') {
+    state.form.error = NETWORK_ERROR_MESSAGE;
+  } else {
+    state.form.error = INVALID_RSS_MESSAGE;
   }
 
-  state.form.loading = true;
-
-  try {
-    const xml = await fetchRss(normalizedUrl);
-    const parsed = parseRss(xml);
-
-    const feed = {
-      id: generateId(),
-      url: normalizedUrl,
-      title: parsed.feed.title,
-      description: parsed.feed.description,
-    };
-
-    const posts = parsed.posts.map((post) => ({
-      ...post,
-      id: generateId(),
-      feedId: feed.id,
-      seen: false,
-    }));
-
-    state.feeds.push(feed);
-    state.posts.unshift(...posts);
-
-    input.value = '';
-    state.form.status = SUCCESS_MESSAGE;
-  } catch (error) {
-    console.error('RSS loading error:', error);
-
-    if (error instanceof Error && error.message === 'NETWORK_ERROR') {
-      state.form.error = NETWORK_ERROR_MESSAGE;
-    } else {
-      state.form.error = INVALID_RSS_MESSAGE;
-    }
-
-    state.form.status = '';
-  } finally {
-    state.form.loading = false;
-  }
+  state.form.status = '';
+} finally {
+  state.form.loading = false;
+}
 });
