@@ -35,7 +35,7 @@ export const initView = (state) => {
     <main id="app-content">
       <h1>RSS агрегатор</h1>
 
-      <form id="rss-form">
+      <form id="rss-form" novalidate>
         <label for="rss-url">
           Ссылка на RSS
         </label>
@@ -43,10 +43,9 @@ export const initView = (state) => {
         <input
           id="rss-url"
           name="url"
-          type="url"
+          type="text"
           placeholder="Введите ссылку"
           autocomplete="off"
-          required
         />
 
         <button
@@ -83,27 +82,23 @@ export const initView = (state) => {
 
   const form = document.querySelector('#rss-form');
   const input = document.querySelector('#rss-url');
-  const submitButton =
-    document.querySelector('#submit-button');
-  const errorElement =
-    document.querySelector('#form-error');
-  const statusElement =
-    document.querySelector('#status');
-  const feedsElement =
-    document.querySelector('#feeds');
-  const postsElement =
-    document.querySelector('#posts');
+  const submitButton = document.querySelector('#submit-button');
+  const errorElement = document.querySelector('#form-error');
+  const statusElement = document.querySelector('#status');
+  const feedsElement = document.querySelector('#feeds');
+  const postsElement = document.querySelector('#posts');
 
   const closeModal = () => {
-    const modal = document.querySelector(
-      '#post-preview-modal',
-    );
+    const modal = document.querySelector('#post-preview-modal');
 
     if (!modal) {
       return;
     }
 
-    modal.close();
+    if (typeof modal.close === 'function') {
+      modal.close();
+    }
+
     modal.remove();
   };
 
@@ -136,9 +131,7 @@ export const initView = (state) => {
 
           <a
             class="full-link"
-            href="${escapeHtml(
-              getSafeUrl(post.link),
-            )}"
+            href="${escapeHtml(getSafeUrl(post.link))}"
             target="_blank"
             rel="noopener noreferrer"
           >
@@ -150,13 +143,9 @@ export const initView = (state) => {
 
     document.body.append(modal);
 
-    const closeButton =
-      modal.querySelector('.close-modal');
-
-    closeButton.addEventListener(
-      'click',
-      closeModal,
-    );
+    modal
+      .querySelector('.close-modal')
+      .addEventListener('click', closeModal);
 
     modal.addEventListener('click', (event) => {
       if (event.target === modal) {
@@ -164,20 +153,14 @@ export const initView = (state) => {
       }
     });
 
-    modal.addEventListener('cancel', (event) => {
-      event.preventDefault();
-      closeModal();
-    });
-
-    modal.showModal();
+    if (typeof modal.showModal === 'function') {
+      modal.showModal();
+    } else {
+      modal.setAttribute('open', '');
+    }
   };
 
   const renderFeeds = () => {
-    if (state.feeds.length === 0) {
-      feedsElement.innerHTML = '';
-      return;
-    }
-
     feedsElement.innerHTML = state.feeds
       .map(
         (feed) => `
@@ -196,26 +179,17 @@ export const initView = (state) => {
   };
 
   const renderPosts = () => {
-    if (state.posts.length === 0) {
-      postsElement.innerHTML = '';
-      return;
-    }
-
     postsElement.innerHTML = state.posts
-      .map((post, index) => {
-        const seen = post.seen === true;
-
-        return `
+      .map(
+        (post, index) => `
           <li class="post">
             <div class="post-header">
               <a
                 class="post-link"
-                href="${escapeHtml(
-                  getSafeUrl(post.link),
-                )}"
+                href="${escapeHtml(getSafeUrl(post.link))}"
                 target="_blank"
                 rel="noopener noreferrer"
-                data-seen="${seen}"
+                data-seen="${post.seen === true}"
               >
                 ${escapeHtml(post.title)}
               </a>
@@ -239,18 +213,15 @@ export const initView = (state) => {
                 : ''
             }
           </li>
-        `;
-      })
+        `,
+      )
       .join('');
 
     postsElement
       .querySelectorAll('[data-preview-index]')
       .forEach((button) => {
         button.addEventListener('click', () => {
-          const index = Number(
-            button.dataset.previewIndex,
-          );
-
+          const index = Number(button.dataset.previewIndex);
           const post = state.posts[index];
 
           if (post) {
@@ -261,14 +232,10 @@ export const initView = (state) => {
   };
 
   const render = () => {
-    errorElement.textContent =
-      state.form.error || '';
+    errorElement.textContent = state.form.error || '';
+    statusElement.textContent = state.form.status || '';
 
-    statusElement.textContent =
-      state.form.status || '';
-
-    submitButton.disabled =
-      state.form.loading;
+    submitButton.disabled = state.form.loading;
 
     renderFeeds();
     renderPosts();
