@@ -10,12 +10,15 @@ export default defineConfig({
           try {
             const requestUrl = new URL(
               req.url,
-              'http://localhost:5173'
+              'http://localhost:5173',
             ).searchParams.get('url');
 
             if (!requestUrl) {
               res.statusCode = 400;
-              res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+              res.setHeader(
+                'Content-Type',
+                'text/plain; charset=utf-8',
+              );
               res.end('Не указан параметр url');
               return;
             }
@@ -31,20 +34,28 @@ export default defineConfig({
 
             if (!response.ok) {
               res.statusCode = response.status;
-              res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-              res.end(`Ошибка удалённого RSS: ${response.status}\n${body}`);
+              res.setHeader(
+                'Content-Type',
+                'text/plain; charset=utf-8',
+              );
+              res.end(
+                `Ошибка удалённого RSS: ${response.status}\n${body}`,
+              );
               return;
             }
 
             res.statusCode = 200;
             res.setHeader(
               'Content-Type',
-              'application/xml; charset=utf-8'
+              'application/xml; charset=utf-8',
             );
             res.end(body);
           } catch (error) {
             res.statusCode = 500;
-            res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+            res.setHeader(
+              'Content-Type',
+              'text/plain; charset=utf-8',
+            );
             res.end(`Ошибка RSS-прокси: ${error.message}`);
           }
         });

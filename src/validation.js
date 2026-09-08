@@ -1,33 +1,30 @@
-import * as yup from 'yup';
-import { setLocale } from 'yup';
+const isValidUrl = (value) => {
+  try {
+    const url = new URL(value);
 
-setLocale({
-  mixed: {
-    required: 'validation.required',
-  },
-  string: {
-    url: 'validation.url',
-  },
-});
+    return ['http:', 'https:'].includes(url.protocol);
+  } catch {
+    return false;
+  }
+};
 
-const urlSchema = yup
-  .string()
-  .trim()
-  .required()
-  .url()
-  .test(
-    'unique-url',
-    'validation.duplicate',
-    (value, context) => {
-      const { feeds } = context.options.context;
+export const validateUrl = async (
+  url,
+  existingUrls = [],
+) => {
+  if (!url || !isValidUrl(url)) {
+    const error = new Error('validation.url');
+    error.name = 'ValidationError';
 
-      return !feeds.includes(value);
-    },
-  );
+    throw error;
+  }
 
-export const validateUrl = (url, feeds) => (
-  urlSchema.validate(url, {
-    context: { feeds },
-    abortEarly: true,
-  })
-);
+  if (existingUrls.includes(url)) {
+    const error = new Error('validation.duplicate');
+    error.name = 'ValidationError';
+
+    throw error;
+  }
+
+  return true;
+};

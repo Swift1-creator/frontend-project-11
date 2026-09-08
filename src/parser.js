@@ -15,6 +15,18 @@ const getDescription = (element) => (
   getTagText(element, 'content')
 );
 
+const getAuthor = (element) => (
+  getTagText(element, 'author') ||
+  getTagText(element, 'dc:creator')
+);
+
+const getCategories = (element) => (
+  [...element.getElementsByTagName('category')]
+    .map((tag) => tag.textContent?.trim())
+    .filter(Boolean)
+    .join(', ')
+);
+
 const getFallbackDescription = ({
   author,
   category,
@@ -55,26 +67,30 @@ export const parseRss = (xmlText) => {
     'application/xml',
   );
 
-  if (document.querySelector('parsererror')) {
-    throw new Error('RSS содержит некорректный XML');
+  const hasParserError = [
+    ...document.getElementsByTagName('parsererror'),
+  ].some((element) => element.textContent?.trim());
+
+  if (hasParserError) {
+    throw new Error('Ресурс не содержит валидный RSS');
   }
 
   const channel = document.querySelector('channel');
 
   if (!channel) {
-    throw new Error('В RSS отсутствует channel');
+    throw new Error('Ресурс не содержит валидный RSS');
   }
 
   const title = getText(channel, 'title');
 
   if (!title) {
-    throw new Error('В RSS отсутствует заголовок channel');
+    throw new Error('Ресурс не содержит валидный RSS');
   }
 
   const posts = [...channel.querySelectorAll('item')]
     .map((item) => {
-      const author = getText(item, 'author');
-      const category = getText(item, 'category');
+      const author = getAuthor(item);
+      const category = getCategories(item);
       const pubDate = getText(item, 'pubDate');
       const description = getDescription(item);
 

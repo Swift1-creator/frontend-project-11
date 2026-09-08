@@ -1,4 +1,5 @@
 import { subscribe } from 'valtio';
+import i18next from './locales.js';
 
 const escapeHtml = (value = '') => String(value)
   .replaceAll('&', '&amp;')
@@ -6,6 +7,18 @@ const escapeHtml = (value = '') => String(value)
   .replaceAll('>', '&gt;')
   .replaceAll('"', '&quot;')
   .replaceAll("'", '&#039;');
+
+const getSafeUrl = (value = '') => {
+  try {
+    const url = new URL(value, window.location.href);
+
+    return ['http:', 'https:'].includes(url.protocol)
+      ? url.href
+      : '#';
+  } catch {
+    return '#';
+  }
+};
 
 const getPostDescription = (post) => (
   post.description ||
@@ -19,18 +32,22 @@ export const initView = (state) => {
 
   app.innerHTML = `
     <main id="app-content">
-      <h1>RSS агрегатор</h1>
+      <h1>${i18next.t('app.title')}</h1>
 
       <form id="rss-form">
+        <label for="rss-url">
+          ${i18next.t('app.urlLabel')}
+        </label>
+
         <input
           id="rss-url"
           type="url"
-          placeholder="https://lenta.ru/rss/news"
-          value="https://lenta.ru/rss/news"
+          placeholder="${i18next.t('app.urlPlaceholder')}"
           required
         />
+
         <button id="submit-button" type="submit">
-          Добавить
+          ${i18next.t('app.addButton')}
         </button>
       </form>
 
@@ -38,12 +55,12 @@ export const initView = (state) => {
       <p id="status"></p>
 
       <section>
-        <h2>Фиды</h2>
+        <h2>${i18next.t('app.feeds')}</h2>
         <div id="feeds"></div>
       </section>
 
       <section>
-        <h2>Посты</h2>
+        <h2>${i18next.t('app.posts')}</h2>
         <ul id="posts"></ul>
       </section>
     </main>
@@ -60,19 +77,26 @@ export const initView = (state) => {
   const closeModal = () => {
     const modal = document.querySelector('#post-preview-modal');
 
-    if (modal) {
-      modal.close();
-      modal.remove();
+    if (!modal) {
+      return;
     }
+
+    if (modal.open) {
+      modal.close();
+    }
+
+    modal.remove();
   };
 
   const showPostPreview = (post) => {
     post.seen = true;
+
     closeModal();
 
     const modal = document.createElement('dialog');
 
     modal.id = 'post-preview-modal';
+
     modal.innerHTML = `
       <div data-test="modal-body">
         <h2 class="modal-title">
@@ -86,15 +110,18 @@ export const initView = (state) => {
         <div class="modal-actions">
           <a
             class="full-link"
-            href="${escapeHtml(post.link)}"
+            href="${escapeHtml(getSafeUrl(post.link))}"
             target="_blank"
             rel="noopener noreferrer"
           >
-            Читать полностью
+            ${i18next.t('common.readMore')}
           </a>
 
-          <button class="close-modal" type="button">
-            Закрыть
+          <button
+            class="close-modal"
+            type="button"
+          >
+            ${i18next.t('common.close')}
           </button>
         </div>
       </div>
@@ -112,72 +139,88 @@ export const initView = (state) => {
       }
     });
 
-    modal.addEventListener('cancel', closeModal);
+    modal.addEventListener('cancel', (event) => {
+      event.preventDefault();
+      closeModal();
+    });
+
     modal.showModal();
   };
 
   const render = () => {
     errorElement.textContent = state.form.error || '';
     statusElement.textContent = state.form.status || '';
+
     submitButton.disabled = state.form.loading;
 
     feedsElement.innerHTML = state.feeds.length === 0
-      ? '<p>Пока нет добавленных фидов</p>'
+      ? `<p>${i18next.t('common.noFeeds')}</p>`
       : state.feeds.map((feed) => `
-          <article>
+          <article class="feed">
             <h3>${escapeHtml(feed.title)}</h3>
-            <p>${escapeHtml(feed.description)}</p>
+            <p>${escapeHtml(feed.description || '')}</p>
           </article>
         `).join('');
 
     if (state.posts.length === 0) {
-      postsElement.innerHTML = '<li>Пока нет постов</li>';
+      postsElement.innerHTML = `
+        <li>${i18next.t('common.noPosts')}</li>
+      `;
+
       return;
     }
 
-    postsElement.innerHTML = state.posts.map((post, index) => {
-      const seen = post.seen === true;
+    postsElement.innerHTML = state.posts
+      .map((post, index) => {
+        const seen = post.seen === true;
 
-      return `
-        <li
-          class="${seen ? 'post-seen' : 'post-new'}"
-          data-seen="${seen}"
-        >
-          <div class="post-header">
-            <a
-              class="post-link"
-              href="${escapeHtml(post.link)}"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              ${escapeHtml(post.title)}
-            </a>
+        return `
+          <li
+            class="${seen ? 'post-seen' : 'post-new'}"
+            data-seen="${seen}"
+          >
+            <div class="post-header">
+              <a
+                class="post-link"
+                href="${escapeHtml(getSafeUrl(post.link))}"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                ${escapeHtml(post.title)}
+              </a>
 
-            <button
-              class="preview-button"
-              type="button"
-              data-preview-index="${index}"
-            >
-              Просмотр
-            </button>
-          </div>
+              <button
+                class="preview-button"
+                type="button"
+                data-preview-index="${index}"
+              >
+                ${i18next.t('common.preview')}
+              </button>
+            </div>
 
-          ${
-            post.pubDate
-              ? `<span class="post-date">${escapeHtml(post.pubDate)}</span>`
-              : ''
-          }
-        </li>
-      `;
-    }).join('');
+            ${
+              post.pubDate
+                ? `
+                  <span class="post-date">
+                    ${escapeHtml(post.pubDate)}
+                  </span>
+                `
+                : ''
+            }
+          </li>
+        `;
+      })
+      .join('');
 
     postsElement
       .querySelectorAll('[data-preview-index]')
       .forEach((button) => {
         button.addEventListener('click', () => {
-          const post = state.posts[
-            Number(button.dataset.previewIndex)
-          ];
+          const index = Number(
+            button.dataset.previewIndex,
+          );
+
+          const post = state.posts[index];
 
           if (post) {
             showPostPreview(post);
@@ -189,5 +232,8 @@ export const initView = (state) => {
   subscribe(state, render);
   render();
 
-  return { form, input };
+  return {
+    form,
+    input,
+  };
 };

@@ -1,31 +1,42 @@
 const UPDATE_INTERVAL = 5000;
 
-const getPostId = (post) => {
-  return post.link || post.title;
-};
+const getPostId = (post) => post.link || post.title;
 
-const addNewPosts = (state, feed, posts) => {
-  const existingPostIds = new Set(
+const addNewPosts = (state, feed, posts = []) => {
+  const existingIds = new Set(
     state.posts
       .filter((post) => post.feedId === feed.id)
       .map(getPostId),
   );
 
-  const newPosts = posts
-    .filter((post) => !existingPostIds.has(getPostId(post)))
-    .map((post) => ({
+  const addedIds = new Set();
+  const newPosts = [];
+
+  posts.forEach((post) => {
+    const postId = getPostId(post);
+
+    if (
+      !postId ||
+      existingIds.has(postId) ||
+      addedIds.has(postId)
+    ) {
+      return;
+    }
+
+    addedIds.add(postId);
+
+    newPosts.push({
       id: crypto.randomUUID(),
       feedId: feed.id,
-      title: post.title,
+      title: post.title || 'Без заголовка',
       description: post.description || '',
-      link: post.link,
-      pubDate: post.pubDate,
+      link: post.link || '',
+      pubDate: post.pubDate || '',
+      author: post.author || '',
+      category: post.category || '',
       seen: false,
-    }));
-
-  console.log(
-    `Фид "${feed.title}": новых постов — ${newPosts.length}`,
-  );
+    });
+  });
 
   if (newPosts.length > 0) {
     state.posts.unshift(...newPosts);
@@ -33,41 +44,33 @@ const addNewPosts = (state, feed, posts) => {
 };
 
 export const startUpdates = (state, fetchRss, parseRss) => {
-  let isChecking = false;
+  let checking = false;
+  let stopped = false;
+  let timeoutId = null;
+
+  const scheduleNextCheck = () => {
+    if (!stopped) {
+      timeoutId = setTimeout(checkUpdates, UPDATE_INTERVAL);
+    }
+  };
 
   const checkUpdates = async () => {
-    console.log(
-      'Автоматическая проверка RSS:',
-      new Date().toLocaleTimeString(),
-    );
-
-    if (isChecking) {
-      console.log('Предыдущая проверка ещё выполняется');
-
-      setTimeout(checkUpdates, UPDATE_INTERVAL);
+    if (stopped || checking) {
       return;
     }
 
-    isChecking = true;
+    checking = true;
 
     try {
       const feeds = [...state.feeds];
 
-      console.log('Количество фидов:', feeds.length);
-
       await Promise.all(
         feeds.map(async (feed) => {
-          console.log(
-            'Проверяется фид:',
-            feed.title,
-            new Date().toLocaleTimeString(),
-          );
-
           try {
-            const xmlText = await fetchRss(feed.url);
-            const result = parseRss(xmlText);
+            const xml = await fetchRss(feed.url);
+            const result = parseRss(xml);
 
-            addNewPosts(state, feed, result.posts);
+            addNewPosts(state, feed, result?.posts || []);
           } catch (error) {
             console.error(
               `Ошибка обновления фида "${feed.title}":`,
@@ -77,15 +80,19 @@ export const startUpdates = (state, fetchRss, parseRss) => {
         }),
       );
     } finally {
-      isChecking = false;
-
-      console.log(
-        'Проверка завершена. Следующая через 5 секунд.',
-      );
-
-      setTimeout(checkUpdates, UPDATE_INTERVAL);
+      checking = false;
+      scheduleNextCheck();
     }
   };
 
   checkUpdates();
+
+  return () => {
+    stopped = true;
+
+    if (timeoutId !== null) {
+      clearTimeout(timeoutId);
+      timeoutId = null;
+    }
+  };
 };
