@@ -25,37 +25,36 @@ export const fetchRss = async (url) => {
     });
 
     if (!response.ok) {
+      if (response.status === 404) {
+        throw new Error('INVALID_RSS');
+      }
+
       throw new Error('NETWORK_ERROR');
     }
 
     const responseText = await response.text();
 
+    let data;
+
     try {
-      const data = JSON.parse(responseText);
-
-      if (data && typeof data.contents === 'string') {
-        if (isRssContent(data.contents)) {
-          return data.contents;
-        }
-
-        throw new Error('INVALID_RSS');
-      }
-
-      throw new Error('INVALID_RSS');
-    } catch (error) {
+      data = JSON.parse(responseText);
+    } catch {
       if (isRssContent(responseText)) {
         return responseText;
       }
 
-      if (
-        error instanceof Error
-        && error.message === 'INVALID_RSS'
-      ) {
-        throw error;
-      }
-
       throw new Error('INVALID_RSS');
     }
+
+    if (!data || typeof data.contents !== 'string') {
+      throw new Error('INVALID_RSS');
+    }
+
+    if (!isRssContent(data.contents)) {
+      throw new Error('INVALID_RSS');
+    }
+
+    return data.contents;
   } catch (error) {
     if (
       error instanceof Error
