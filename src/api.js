@@ -1,6 +1,6 @@
 const corsProxy = 'https://allorigins.hexlet.app';
 
-const REQUEST_TIMEOUT = 4500;
+const REQUEST_TIMEOUT = 3000;
 
 const isRssContent = (value) => (
   typeof value === 'string'
@@ -10,6 +10,7 @@ const isRssContent = (value) => (
 
 export const fetchRss = async (url) => {
   const controller = new AbortController();
+
   const timeoutId = setTimeout(() => {
     controller.abort();
   }, REQUEST_TIMEOUT);
