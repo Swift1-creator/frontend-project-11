@@ -1,6 +1,6 @@
 const corsProxy = 'https://allorigins.hexlet.app';
 
-const REQUEST_TIMEOUT = 4500;
+const REQUEST_TIMEOUT = 10000;
 
 const isRssContent = (value) => (
   typeof value === 'string'
@@ -56,6 +56,13 @@ export const fetchRss = async (url) => {
 
     return data.contents;
   } catch (error) {
+    if (
+      error instanceof Error
+      && error.name === 'AbortError'
+    ) {
+      throw new Error('INVALID_RSS');
+    }
+
     if (
       error instanceof Error
       && (
