@@ -2,6 +2,11 @@ const corsProxy = 'https://allorigins.hexlet.app';
 
 const REQUEST_TIMEOUT = 4500;
 
+const isRssContent = (value) => (
+  typeof value === 'string'
+  && /<(rss|feed)(?:\s|>)/i.test(value)
+);
+
 export const fetchRss = async (url) => {
   const controller = new AbortController();
 
@@ -29,20 +34,23 @@ export const fetchRss = async (url) => {
       const data = JSON.parse(responseText);
 
       if (data && typeof data.contents === 'string') {
-        return data.contents;
+        if (isRssContent(data.contents)) {
+          return data.contents;
+        }
+
+        throw new Error('INVALID_RSS');
       }
 
       throw new Error('INVALID_RSS');
     } catch (error) {
-      if (
-        responseText.includes('<rss') ||
-        responseText.includes('<feed') ||
-        responseText.includes('<?xml')
-      ) {
+      if (isRssContent(responseText)) {
         return responseText;
       }
 
-      if (error instanceof Error && error.message === 'INVALID_RSS') {
+      if (
+        error instanceof Error
+        && error.message === 'INVALID_RSS'
+      ) {
         throw error;
       }
 
@@ -50,10 +58,10 @@ export const fetchRss = async (url) => {
     }
   } catch (error) {
     if (
-      error instanceof Error &&
-      (
-        error.message === 'INVALID_RSS' ||
-        error.message === 'NETWORK_ERROR'
+      error instanceof Error
+      && (
+        error.message === 'INVALID_RSS'
+        || error.message === 'NETWORK_ERROR'
       )
     ) {
       throw error;

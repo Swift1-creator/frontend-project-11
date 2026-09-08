@@ -9,7 +9,7 @@ const INVALID_RSS_MESSAGE = 'Ресурс не содержит валидный
 const DUPLICATE_RSS_MESSAGE = 'RSS уже загружен';
 const INVALID_URL_MESSAGE = 'Ссылка должна быть валидным URL';
 const NETWORK_ERROR_MESSAGE = 'Ошибка сети';
-const SUCCESS_MESSAGE = 'RSS успешно загружен';
+const DUPLICATE_RSS_MESSAGE = 'RSS уже существует';
 
 const generateId = () => (
   `${Date.now()}-${Math.random().toString(16).slice(2)}`
