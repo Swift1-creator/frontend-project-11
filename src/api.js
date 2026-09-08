@@ -10,7 +10,6 @@ const isRssContent = (value) => (
 
 export const fetchRss = async (url) => {
   const controller = new AbortController();
-
   const timeoutId = setTimeout(() => {
     controller.abort();
   }, REQUEST_TIMEOUT);
