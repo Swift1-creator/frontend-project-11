@@ -4,7 +4,6 @@ import { state } from './state.js';
 import { fetchRss } from './api.js';
 import { parseRss } from './parser.js';
 import { initView } from './view.js';
-import { startUpdates } from './application.js';
 
 const { form, input } = initView(state);
 
@@ -22,7 +21,7 @@ form.addEventListener('submit', async (event) => {
     parsedUrl = new URL(url);
 
     if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
-      throw new Error('invalid-url');
+      throw new Error('INVALID_URL');
     }
   } catch {
     state.form.error = 'Ссылка должна быть валидным URL';
@@ -42,7 +41,7 @@ form.addEventListener('submit', async (event) => {
     const xml = await fetchRss(normalizedUrl);
     const parsed = parseRss(xml);
 
-    if (!parsed.feed || !parsed.feed.title) {
+    if (!parsed || !parsed.feed || !parsed.feed.title) {
       throw new Error('INVALID_RSS');
     }
 
@@ -53,7 +52,7 @@ form.addEventListener('submit', async (event) => {
       description: parsed.feed.description || '',
     };
 
-    const posts = parsed.posts.map((post) => ({
+    const posts = (parsed.posts || []).map((post) => ({
       ...post,
       id: crypto.randomUUID(),
       feedId: feed.id,
@@ -80,5 +79,3 @@ form.addEventListener('submit', async (event) => {
     state.form.loading = false;
   }
 });
-
-startUpdates(state, fetchRss, parseRss);

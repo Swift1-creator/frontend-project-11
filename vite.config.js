@@ -1,6 +1,10 @@
 import { defineConfig } from 'vite';
 
-const fetchWithTimeout = async (url, options = {}, timeout = 3500) => {
+const fetchWithTimeout = async (
+  url,
+  options = {},
+  timeout = 3000,
+) => {
   const controller = new AbortController();
 
   const timeoutId = setTimeout(() => {
@@ -74,7 +78,7 @@ const rssProxyMiddleware = async (req, res) => {
             'application/rss+xml, application/xml, text/xml, */*',
         },
       },
-      3500,
+      3000,
     );
 
     if (!response.ok) {

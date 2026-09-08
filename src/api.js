@@ -3,7 +3,7 @@ export const fetchRss = async (url) => {
 
   const timeoutId = setTimeout(() => {
     controller.abort();
-  }, 4500);
+  }, 4000);
 
   try {
     const response = await fetch(
