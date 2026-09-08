@@ -3,7 +3,7 @@ export const fetchRss = async (url) => {
 
   const timeoutId = setTimeout(() => {
     controller.abort();
-  }, 4000);
+  }, 4500);
 
   try {
     const response = await fetch(
@@ -13,11 +13,11 @@ export const fetchRss = async (url) => {
       },
     );
 
+    const body = await response.text();
+
     if (!response.ok) {
       throw new Error('NETWORK_ERROR');
     }
-
-    const body = await response.text();
 
     if (!body.trim()) {
       throw new Error('INVALID_RSS');
